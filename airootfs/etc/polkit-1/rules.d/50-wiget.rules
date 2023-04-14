@@ -1,0 +1,8 @@
+polkit.addRule(function(action, subject) {
+    if (action.id == "gr.ictpro.jsalatas.plasma.pstate") {
+            return polkit.Result.AUTH_ADMIN;
+    }
+    if (action.lookup("program") == "/usr/share/plasma/plasmoids/gr.ictpro.jsalatas.plasma.pstate/contents/code/set_prefs.sh") {
+            return polkit.Result.YES;
+    }
+});

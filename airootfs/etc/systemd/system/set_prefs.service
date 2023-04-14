@@ -1,0 +1,15 @@
+[Unit]
+Description=Set Performance Script
+Requires=local-fs.target
+After=local-fs.target
+
+
+[Service]
+Type=oneshot
+ExecStart=/usr/share/plasma/plasmoids/gr.ictpro.jsalatas.plasma.pstate/contents/code/set_prefs.sh -write-sensor gpu_max_freq 1050 || true
+ExecStart=/usr/share/plasma/plasmoids/gr.ictpro.jsalatas.plasma.pstate/contents/code/set_prefs.sh -write-sensor gpu_boost_freq 1050 || true
+ExecStart=/usr/share/plasma/plasmoids/gr.ictpro.jsalatas.plasma.pstate/contents/code/set_prefs.sh -write-sensor cpu_max_perf 70 || true
+RemainAfterExit=no
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,19 @@
+[Desktop Entry]
+Comment[en_US]=
+Comment=
+Exec=sudo pacman -Sy --noconfirm cmake extra-cmake-modules base-devel && cd ~/Downloads && rm -rf plasma-pstate && git clone https://github.com/frankenfruity/plasma-pstate && cd plasma-pstate && mkdir build && cd build && cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr -DCMAKE_BUILD_TYPE=Release .. && make && sudo make install && sudo systemctl enable set_prefs.service && rm -rf ~/Desktop/build-plasma-pstate.desktop
+GenericName[en_US]=
+GenericName=
+Icon=system-run
+MimeType=
+Name[en_US]=build-plasma-pstate
+Name=build-plasma-pstate
+Path=/usr/bin
+StartupNotify=true
+Terminal=true
+TerminalOptions=
+Type=Application
+X-DBUS-ServiceName=
+X-DBUS-StartupType=
+X-KDE-SubstituteUID=false
+X-KDE-Username=
