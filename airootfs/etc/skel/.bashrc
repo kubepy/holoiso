@@ -153,3 +153,48 @@ __steamos_prompt_command() {
 
 __steamos_ps1 '(\[\033[1;32m\]\u@\h\[\033[1;34m\] \W\[\033[0m\])\$ '
 PROMPT_COMMAND="__steamos_prompt_command '$PS1'${PROMPT_COMMAND:+; $PROMPT_COMMAND; }"
+
+powerbutton_hibernate_setup() {
+if [[ ! -f ~/.config/powermanagementprofilesrc ]]; then
+mkdir -p ~/.config
+cat <<'EOF' > ~/.config/powermanagementprofilesrc
+[AC][DPMSControl]
+idleTime[$d]
+lockBeforeTurnOff[$d]
+
+[AC][HandleButtonEvents]
+lidAction=2
+powerButtonAction=2
+
+[Battery][DPMSControl]
+idleTime[$d]
+lockBeforeTurnOff[$d]
+
+[Battery][HandleButtonEvents]
+lidAction=2
+powerButtonAction=2
+
+[Battery][SuspendSession]
+idleTime[$d]
+suspendThenHibernate[$d]
+suspendType[$d]
+
+[LowBattery][BrightnessControl]
+value[$d]
+
+[LowBattery][DPMSControl]
+idleTime[$d]
+lockBeforeTurnOff[$d]
+
+[LowBattery][HandleButtonEvents]
+lidAction=2
+powerButtonAction=2
+
+[LowBattery][SuspendSession]
+idleTime[$d]
+suspendThenHibernate[$d]
+suspendType[$d]
+EOF
+fi
+}
+powerbutton_hibernate_setup
