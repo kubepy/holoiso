@@ -186,8 +186,8 @@ xargs -0 zenity --list --width=600 --height=512 --title="Select disk" --text="Se
 
 	efiPartNum=$(expr $numPartitions + 1)
 	rootPartNum=$(expr $numPartitions + 2)
-	homePartNum=$(expr $numPartitions + 3)
-	swapPartNum=$(expr $numPartitions + 4)
+	homePartNum=$(expr $numPartitions + 4)
+	swapPartNum=$(expr $numPartitions + 3)
 
 	echo "\nCalculating start and end of free space..."
 	diskSpace=$(awk '/'${DRIVEDEVICE}'/ {print $3; exit}' /proc/partitions)
@@ -213,6 +213,8 @@ xargs -0 zenity --list --width=600 --height=512 --title="Select disk" --text="Se
 	efiEnd=$(expr $efiStart + 256)
 	rootStart=$efiEnd
 	rootEnd=$(expr $rootStart + 24000)
+	swapStart=$rootEnd
+	swapEnd=$(expr $swapStart + 32000)
 
 	if [ $efiEnd -gt $realDiskSpace ]; then
 		echo "Not enough space available, please choose another disk and try again"
@@ -231,8 +233,8 @@ xargs -0 zenity --list --width=600 --height=512 --title="Select disk" --text="Se
 		parted ${DEVICE} mkpart primary btrfs ${rootStart}M 100%
 	else
 		parted ${DEVICE} mkpart primary btrfs ${rootStart}M ${rootEnd}M
-		parted -s -a optimal -- ${DEVICE} mkpart primary ext4 ${rootEnd}M -32GiB
-		parted -s -a optimal -- ${DEVICE} mkpart primary linux-swap -32Gib -2048s
+		parted ${DEVICE} mkpart primary linux-swap ${swapStart}M ${swapEnd}M
+		parted ${DEVICE} mkpart primary ext4 ${swapEnd}M 100%
 		home=true
 	fi
 	root_partition="${INSTALLDEVICE}${rootPartNum}"
