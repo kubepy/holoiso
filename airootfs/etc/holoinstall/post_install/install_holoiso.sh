@@ -193,7 +193,8 @@ xargs -0 zenity --list --width=600 --height=512 --title="Select disk" --text="Se
 
 	efiPartNum=$(expr $numPartitions + 1)
 	rootPartNum=$(expr $numPartitions + 2)
-	homePartNum=$(expr $numPartitions + 3)
+	swapPartNum=$(expr $numPartitions + 3)
+	homePartNum=$(expr $numPartitions + 4)
 
 	echo "\nCalculating start and end of free space..."
 	diskSpace=$(awk '/'${DRIVEDEVICE}'/ {print $3; exit}' /proc/partitions)
@@ -219,6 +220,8 @@ xargs -0 zenity --list --width=600 --height=512 --title="Select disk" --text="Se
 	efiEnd=$(expr $efiStart + 256)
 	rootStart=$efiEnd
 	rootEnd=$(expr $rootStart + 24000)
+	swapStart=$rootEnd
+	swapEnd=$(expr $swapStart + 32000)
 
 	if [ $efiEnd -gt $realDiskSpace ]; then
 		echo "Not enough space available, please choose another disk and try again"
@@ -237,7 +240,8 @@ xargs -0 zenity --list --width=600 --height=512 --title="Select disk" --text="Se
 		parted ${DEVICE} mkpart primary btrfs ${rootStart}M 100%
 	else
 		parted ${DEVICE} mkpart primary btrfs ${rootStart}M ${rootEnd}M
-		parted ${DEVICE} mkpart primary ext4 ${rootEnd}M 100%
+		parted ${DEVICE} mkpart primary linux-swap ${swapStart}M ${swapEnd}M
+		parted ${DEVICE} mkpart primary ext4 ${swapEnd}M 100%
 		home=true
 	fi
 	root_partition="${INSTALLDEVICE}${rootPartNum}"
@@ -246,6 +250,10 @@ xargs -0 zenity --list --width=600 --height=512 --title="Select disk" --text="Se
 	fatlabel ${INSTALLDEVICE}${efiPartNum} HOLOEFI
 	mkfs -t btrfs -f ${root_partition}
 	btrfs filesystem label ${root_partition} holo-root
+	swap_partition="${INSTALLDEVICE}${swapPartNum}"
+	mkswap ${swap_partition}
+	swapon ${swap_partition}
+	swap_uuid="$(blkid ${swap_partition} -o value -s UUID)"
 	if [ $home ]; then
 		if [[ -n "$(sudo blkid | grep holo-home | cut -d ':' -f 1 | head -n 1)" ]]; then
 				if [[ "${HOME_REUSE_TYPE}" == "1" ]]; then
@@ -287,6 +295,7 @@ base_os_install() {
 	cp -r /etc/holoinstall/post_install/pacman.conf ${HOLO_INSTALL_DIR}/etc/pacman.conf
 	arch-chroot ${HOLO_INSTALL_DIR} pacman-key --init
     arch-chroot ${HOLO_INSTALL_DIR} pacman -Rdd --noconfirm linux-neptune-61 linux-neptune-61-headers mkinitcpio-archiso
+    	arch-chroot ${HOLO_INSTALL_DIR} sed -i 's/\(HOOKS=.*k\)/\1 resume/' /etc/mkinitcpio.conf
 	arch-chroot ${HOLO_INSTALL_DIR} mkinitcpio -P
     arch-chroot ${HOLO_INSTALL_DIR} pacman -U --noconfirm $(find /etc/holoinstall/post_install/pkgs | grep pkg.tar.zst)
 
@@ -299,6 +308,7 @@ base_os_install() {
 	clear
 	echo "\nBase system installation done, generating fstab..."
 	genfstab -U -p /mnt >> /mnt/etc/fstab
+	swapoff -a
 	sleep 1
 	clear
 
@@ -335,6 +345,7 @@ full_install() {
 		echo "You're running this on a Steam Deck. linux-firmware-neptune will be installed to ensure maximum kernel-side compatibility."
 		arch-chroot ${HOLO_INSTALL_DIR} pacman -Rdd --noconfirm linux-firmware
 		arch-chroot ${HOLO_INSTALL_DIR} pacman -U --noconfirm $(find /etc/holoinstall/post_install/pkgs_addon | grep linux-firmware-neptune)
+		arch-chroot ${HOLO_INSTALL_DIR} sed -i 's/\(HOOKS=.*k\)/\1 resume/' /etc/mkinitcpio.conf
 		arch-chroot ${HOLO_INSTALL_DIR} mkinitcpio -P
 	fi
 	echo "\nConfiguring Steam Deck UI by default..."		
