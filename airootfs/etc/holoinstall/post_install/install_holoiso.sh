@@ -212,9 +212,9 @@ xargs -0 zenity --list --width=600 --height=512 --title="Select disk" --text="Se
 	fi
 	efiEnd=$(expr $efiStart + 256)
 	rootStart=$efiEnd
-	rootEnd=$(expr $rootStart + 24000)
+	rootEnd=$(expr $rootStart + 10240)
 	swapStart=$rootEnd
-	swapEnd=$(expr $swapStart + 32000)
+	swapEnd=$(expr $swapStart + 32768)
 
 	if [ $efiEnd -gt $realDiskSpace ]; then
 		echo "Not enough space available, please choose another disk and try again"
@@ -223,18 +223,18 @@ xargs -0 zenity --list --width=600 --height=512 --title="Select disk" --text="Se
 	fi
 
 	echo "\nCreating partitions..."
-	parted ${DEVICE} mkpart primary fat32 ${efiStart}M ${efiEnd}M
+	parted ${DEVICE} mkpart primary fat32 ${efiStart}MiB ${efiEnd}MiB
 	parted ${DEVICE} set ${efiPartNum} boot on
 	parted ${DEVICE} set ${efiPartNum} esp on
 	# If the available storage is less than 64GB, don't create /home.
 	# If the boot device is mmcblk0, don't create an ext4 partition or it will break steamOS versions
 	# released after May 20.
 	if [ $diskSpace -lt 64000000 ] || [[ "${DEVICE}" =~ mmcblk0 ]]; then
-		parted ${DEVICE} mkpart primary btrfs ${rootStart}M 100%
+		parted ${DEVICE} mkpart primary btrfs ${rootStart}MiB 100%
 	else
-		parted ${DEVICE} mkpart primary btrfs ${rootStart}M ${rootEnd}M
-		parted ${DEVICE} mkpart primary linux-swap ${swapStart}M ${swapEnd}M
-		parted ${DEVICE} mkpart primary ext4 ${swapEnd}M 100%
+		parted ${DEVICE} mkpart primary btrfs ${rootStart}MiB ${rootEnd}MiB
+		parted ${DEVICE} mkpart primary linux-swap ${swapStart}MiB ${swapEnd}MiB
+		parted ${DEVICE} mkpart primary ext4 ${swapEnd}MiB 100%
 		home=true
 	fi
 	root_partition="${INSTALLDEVICE}${rootPartNum}"
