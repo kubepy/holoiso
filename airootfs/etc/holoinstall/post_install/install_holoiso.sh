@@ -221,7 +221,9 @@ xargs -0 zenity --list --width=600 --height=512 --title="Select disk" --text="Se
 	rootStart=$efiEnd
 	rootEnd=$(expr $rootStart + 10240)
 	swapStart=$rootEnd
-	swapEnd=$(expr $swapStart + 32768)
+	swapEnd=$(expr $swapStart + 49152)
+	homeStart=$swapEnd
+	homeEnd=$(expr $homeStart + 40960)
 
 	if [ $efiEnd -gt $realDiskSpace ]; then
 		echo "Not enough space available, please choose another disk and try again"
@@ -241,7 +243,7 @@ xargs -0 zenity --list --width=600 --height=512 --title="Select disk" --text="Se
 	else
 		parted ${DEVICE} mkpart primary btrfs ${rootStart}MiB ${rootEnd}MiB
 		parted ${DEVICE} mkpart primary linux-swap ${swapStart}MiB ${swapEnd}MiB
-		parted ${DEVICE} mkpart primary ext4 ${swapEnd}MiB 100%
+		parted ${DEVICE} mkpart primary ext4 ${homeStart}MiB ${homeEnd}MiB
 		home=true
 	fi
 	root_partition="${INSTALLDEVICE}${rootPartNum}"
